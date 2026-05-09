@@ -1,0 +1,10 @@
+package com.activityManager.activity.entity.dto;
+
+import lombok.Data;
+
+@Data
+public class ActivityRequest {
+    private String title;
+    private String description;
+
+}
