@@ -10,4 +10,10 @@ public interface ActivityService {
     ActivityResponse create(ActivityRequest request, String userId);
 
     List<ActivityResponse> getUserActivities(Long userId);
+
+    ActivityResponse startActivity(Long id);
+
+    ActivityResponse completeActivity(Long id);
+
+    ActivityResponse cancelActivity(Long id);
 }

@@ -10,6 +10,7 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/activity_db
+      database: activity_db
 
 logging:
   level:
