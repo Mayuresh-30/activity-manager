@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 @Builder
 public class UserResponse {
+    private String id;
     private String email;
 //    private List<Activity> activities;
     private String message;
