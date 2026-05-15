@@ -1,6 +1,5 @@
 package com.activityManager.user.entity;
 
-import com.activityManager.activity.entity.Activity;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -8,7 +7,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.List;
 
 @Document(collection = "users")
 @Getter
@@ -32,6 +30,4 @@ public class User {
     @NotBlank(message = "Password is required")
     @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
-
-    private List<Activity> activities;
 }

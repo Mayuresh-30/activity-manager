@@ -47,4 +47,19 @@ public class ActivityController {
         ActivityResponse activityResponse = activityService.cancelActivity(id);
         return ResponseEntity.ok(activityResponse);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ActivityResponse> updateActivity(
+            @PathVariable Long id,
+            @Valid @RequestBody ActivityRequest request
+    ) {
+        ActivityResponse activityResponse = activityService.updateActivity(id, request);
+        return ResponseEntity.ok(activityResponse);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteActivity(@PathVariable Long id) {
+        activityService.deleteActivity(id);
+        return ResponseEntity.noContent().build();
+    }
 }

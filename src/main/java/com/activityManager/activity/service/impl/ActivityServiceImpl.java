@@ -1,5 +1,10 @@
 package com.activityManager.activity.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.activityManager.activity.entity.Activity;
 import com.activityManager.activity.entity.dto.ActivityRequest;
 import com.activityManager.activity.entity.dto.ActivityResponse;
@@ -7,27 +12,30 @@ import com.activityManager.activity.exception.ActivityNotFoundException;
 import com.activityManager.activity.exception.ActivityStatusException;
 import com.activityManager.activity.repository.ActivityRepo;
 import com.activityManager.activity.service.ActivityService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import com.activityManager.user.exception.UserNotFoundException;
+import com.activityManager.user.entity.User;
+import com.activityManager.user.repository.UserRepo;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ActivityServiceImpl implements ActivityService {
 
-    private ActivityRepo repo;
+    private final ActivityRepo repo;
+    private final UserRepo userRepo;
 
     @Override
     public ActivityResponse create(ActivityRequest request, String userId){
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
         Activity activity = Activity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .userId(userId)
+                .userId(user.getId())
                 .status(Activity.ActivityStatus.PENDING)
                 .build();
-
+        
         repo.save(activity);
 
         ActivityResponse response = ActivityResponse.builder()
@@ -115,5 +123,33 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setStatus(Activity.ActivityStatus.CANCELLED);
         Activity savedActivity = repo.save(activity);
         return convertToResponse(savedActivity);
+    }
+
+    @Override
+    public ActivityResponse updateActivity(Long id, ActivityRequest request) {
+        String activityIdStr = String.valueOf(id);
+        Activity activity = repo.findById(activityIdStr)
+                .orElseThrow(() -> new ActivityNotFoundException(activityIdStr));
+        
+        // Update only the fields that are provided in the request
+        if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
+            activity.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            activity.setDescription(request.getDescription());
+        }
+        
+        Activity savedActivity = repo.save(activity);
+        return convertToResponse(savedActivity);
+    }
+
+    @Override
+    public void deleteActivity(Long id) {
+        String activityIdStr = String.valueOf(id);
+        Activity activity = repo.findById(activityIdStr)
+                .orElseThrow(() -> new ActivityNotFoundException(activityIdStr));
+        
+        // Delete the activity regardless of its status
+        repo.delete(activity);
     }
 }
