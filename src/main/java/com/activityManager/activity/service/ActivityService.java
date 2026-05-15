@@ -16,4 +16,8 @@ public interface ActivityService {
     ActivityResponse completeActivity(Long id);
 
     ActivityResponse cancelActivity(Long id);
+
+    ActivityResponse updateActivity(Long id, ActivityRequest request);
+
+    void deleteActivity(Long id);
 }
