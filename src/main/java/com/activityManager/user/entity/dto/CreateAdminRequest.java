@@ -1,23 +1,13 @@
-package com.activityManager.user.entity;
+package com.activityManager.user.entity.dto;
 
-import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.Data;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-@Document(collection = "users")
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class User {
-
-    @Id
-    private String id;
+@Data
+public class CreateAdminRequest {
 
     @NotBlank(message = "Name is required")
     @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
@@ -30,7 +20,4 @@ public class User {
     @NotBlank(message = "Password is required")
     @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
-
-    @Builder.Default
-    private UserRole role = UserRole.ROLE_USER;
 }

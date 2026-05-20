@@ -1,23 +1,25 @@
 package com.activityManager.activity.service;
 
+import com.activityManager.activity.entity.Activity;
 import com.activityManager.activity.entity.dto.ActivityRequest;
 import com.activityManager.activity.entity.dto.ActivityResponse;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ActivityService {
-    ActivityResponse create(ActivityRequest request, String userId);
+    ActivityResponse create(String userId, ActivityRequest request);
 
-    List<ActivityResponse> getUserActivities(Long userId);
+    Page<ActivityResponse> getUserActivities(String userId, Activity.ActivityStatus status, Pageable pageable);
 
-    ActivityResponse startActivity(Long id);
+    ActivityResponse getActivityById(String userId, String activityId);
 
-    ActivityResponse completeActivity(Long id);
+    ActivityResponse startActivity(String userId, String activityId);
 
-    ActivityResponse cancelActivity(Long id);
+    ActivityResponse completeActivity(String userId, String activityId);
 
-    ActivityResponse updateActivity(Long id, ActivityRequest request);
+    ActivityResponse cancelActivity(String userId, String activityId);
 
-    void deleteActivity(Long id);
+    ActivityResponse updateActivity(String userId, String activityId, ActivityRequest request);
+
+    void deleteActivity(String userId, String activityId);
 }
