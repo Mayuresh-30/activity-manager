@@ -1,20 +1,22 @@
 package com.activityManager.user.service.impl;
 
 import com.activityManager.user.entity.User;
+import com.activityManager.user.entity.dto.AuthResponse;
 import com.activityManager.user.entity.dto.UserLoginRequest;
 import com.activityManager.user.entity.dto.UserRegisterRequest;
 import com.activityManager.user.entity.dto.UserResponse;
+import com.activityManager.user.entity.dto.UpdateUserRequest;
 import com.activityManager.user.exception.UserAlreadyExistsException;
 import com.activityManager.user.exception.UserAuthenticationException;
 import com.activityManager.user.exception.UserNotFoundException;
 import com.activityManager.user.repository.UserRepo;
+import com.activityManager.user.security.JwtTokenProvider;
 import com.activityManager.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,10 +25,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepo userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public UserResponse register(UserRegisterRequest request) {
-        // Check if user already exists with this email
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new UserAlreadyExistsException(request.getEmail(), "email");
         }
@@ -41,20 +43,19 @@ public class UserServiceImpl implements UserService {
 
         return UserResponse.builder()
                 .id(user.getId())
-                .email(request.getEmail())
-                .message("User Registered Successfully")
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .message("User registered successfully")
                 .build();
     }
 
     @Override
-    public UserResponse login(UserLoginRequest request) {
+    public AuthResponse login(UserLoginRequest request) {
         try {
-            // Verify user exists first
-            if (userRepository.findByEmail(request.getEmail()).isEmpty()) {
-                throw UserNotFoundException.forEmail(request.getEmail());
-            }
+            User user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> UserNotFoundException.forEmail(request.getEmail()));
 
-            // Attempt authentication
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(),
@@ -62,16 +63,15 @@ public class UserServiceImpl implements UserService {
                     )
             );
 
-            // Get the authenticated user to include ID in response
-            User authenticatedUser = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new UserNotFoundException(request.getEmail()));
-
-            return UserResponse.builder()
-                    .id(authenticatedUser.getId())
-                    .email(request.getEmail())
-                    .message("Login SuccessFull")
+            String token = jwtTokenProvider.generateToken(user);
+            return AuthResponse.builder()
+                    .accessToken(token)
+                    .tokenType("Bearer")
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .name(user.getName())
+                    .role(user.getRole().name())
                     .build();
-                    
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
             throw new UserAuthenticationException(request.getEmail(), "Invalid email or password");
         } catch (org.springframework.security.core.AuthenticationException e) {
@@ -93,10 +93,51 @@ public class UserServiceImpl implements UserService {
         return convertToUserResponse(user);
     }
 
+    @Override
+    public UserResponse updateUser(String id, UpdateUserRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        if (request.getName() != null && !request.getName().isEmpty()) {
+            user.setName(request.getName());
+        }
+
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            if (userRepository.findByEmail(request.getEmail()).isPresent() &&
+                    !userRepository.findByEmail(request.getEmail()).get().getId().equals(id)) {
+                throw new UserAlreadyExistsException(request.getEmail(), "email");
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        userRepository.save(user);
+
+        return UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .message("User updated successfully")
+                .build();
+    }
+
+    @Override
+    public void deleteUser(String id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        userRepository.delete(user);
+    }
+
     private UserResponse convertToUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
+                .name(user.getName())
                 .email(user.getEmail())
+                .role(user.getRole().name())
                 .message("User found successfully")
                 .build();
     }

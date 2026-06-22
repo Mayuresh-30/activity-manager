@@ -1,6 +1,6 @@
 package com.activityManager.user.controller;
 
-
+import com.activityManager.user.entity.dto.AuthResponse;
 import com.activityManager.user.entity.dto.UserLoginRequest;
 import com.activityManager.user.entity.dto.UserRegisterRequest;
 import com.activityManager.user.entity.dto.UserResponse;
@@ -23,7 +23,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public UserResponse login(@Valid @RequestBody UserLoginRequest request) {
+    public AuthResponse login(@Valid @RequestBody UserLoginRequest request) {
         return userService.login(request);
     }
 }
